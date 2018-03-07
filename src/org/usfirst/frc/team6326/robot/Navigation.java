@@ -1,7 +1,10 @@
 package org.usfirst.frc.team6326.robot;
 
+import java.util.Optional;
+
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Navigation {
 
@@ -11,7 +14,7 @@ public class Navigation {
 		this.driveTrain = initDriveTrain;
 	}
 
-	public boolean turn(double degrees, double heading, Direction direction) {
+	public boolean turn(double degrees, double heading, Direction direction, boolean debug) {
 		double absHeading = Math.abs(heading);
 		double remaining = degrees - absHeading;
 
@@ -19,11 +22,18 @@ public class Navigation {
 		 * We want our top end turn speed to be about 0.8 and the motors stall out at
 		 * about 0.4, so we calculate the remaining turn percentage and multiply it by
 		 * 0.4, then add 0.4 to it so that our motor power range goes from 0.8 (when
-		 * turn started) to 0.4 (when turn complete)
+		 * turn started) to 0.4 (when turn complete)`
 		 */
-		double power = ((remaining / degrees) * 0.4) + 0.4;
+		double power = ((remaining / degrees) * 0.5) + 0.4;
 		
-		if (absHeading < degrees && remaining > 2) {
+		if (debug) {
+			SmartDashboard.putNumber("Degrees to go: ", remaining);
+			SmartDashboard.putNumber("Absolute Heading", absHeading);
+			SmartDashboard.putNumber("Target Angle", degrees);
+			SmartDashboard.putNumber("Power", power);
+		}
+
+		if (absHeading < degrees) {
 			
 			if (direction == Direction.COUNTERCLOCKWISE) {
 				this.driveTrain.tankDrive(-power, power);
@@ -31,10 +41,12 @@ public class Navigation {
 				this.driveTrain.tankDrive(power, -power);
 			}
 			
-			return false;
+			return true; // still turning
 		} else {
-			return true;
+			return false; // no longer turning
 		}
+		
+		
 	}
 	
 	public boolean straight(double goal, double traveled, Direction direction) {
